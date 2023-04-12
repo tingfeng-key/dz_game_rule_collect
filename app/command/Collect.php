@@ -43,6 +43,7 @@ class Collect extends Command
         foreach ($data as &$item) {
             $output->writeln("start level page:".$item['one_level_name']);
             $item['levels'] = QueryList::get('https://wordsofwonders.net'.$item['link'])
+//                QueryList::get('https://wordsofwonders.net/en/yellowstone-national-park/')
                 ->rules([
                     'two_level_name'=>array('a','text'),
                     'link'=>array('a','href')
@@ -54,22 +55,30 @@ class Collect extends Command
             foreach ($item['levels'] as &$value) {
                 $output->writeln("start level page:".$value['two_level_name']);
 
-                $ql = QueryList::get('https://wordsofwonders.net'.$value['link']);
+                try {
+                    //                $ql = QueryList::get('https://wordsofwonders.net/en/yellowstone-national-park/level-1003');
+                    $ql = QueryList::get('https://wordsofwonders.net'.$value['link']);
 
-                $value['content'] = $ql->find(".crossword .crossword-row")->map(function ($item) {
-                    return $item->find(".letter")->texts()->all();
-                })->all();
+                    $value['content'] = $ql->find(".crossword .crossword-row")->map(function ($item) {
+                        return $item->find(".letter")->texts()->all();
+                    })->all();
 
-                $content2HtmlArray = explode("<br>", $ql->find(".words")->html());
+                    $content2HtmlArray = explode("<br>", $ql->find(".words")->html());
 
-                $content2Array = [];
-                foreach ($content2HtmlArray as $str) {
-                    $content2 = QueryList::html($str)->find(".let")->texts()->all();
-                    if (!count($content2)) continue;
-                    $content2Array[] = $content2;
+                    $content2Array = [];
+                    foreach ($content2HtmlArray as $str) {
+                        $content2 = QueryList::html($str)->find(".let")->texts()->all();
+                        if (!count($content2)) continue;
+                        $content2Array[] = $content2;
+                    }
+//                var_dump($content2Array);
+//                return self::SUCCESS;
+
+                    $value['content2'] = $content2Array;
+                }catch (\Throwable $throwable) {
+                    continue;
                 }
 
-                $value['content2'] = $content2Array;
             }
         }
 

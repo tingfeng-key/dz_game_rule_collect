@@ -29,6 +29,9 @@ use Webman\Config;
 use Webman\Route;
 use Workerman\Worker;
 
+// Webman version
+const WEBMAN_VERSION = '1.4';
+
 // Project base path
 define('BASE_PATH', dirname(__DIR__));
 
@@ -189,15 +192,14 @@ function redirect(string $location, int $status = 302, array $headers = []): Res
  * @param string $template
  * @param array $vars
  * @param string|null $app
- * @param string|null $plugin
  * @return Response
  */
-function view(string $template, array $vars = [], string $app = null, string $plugin = null): Response
+function view(string $template, array $vars = [], string $app = null): Response
 {
     $request = \request();
-    $plugin = $plugin === null ? ($request->plugin ?? '') : $plugin;
+    $plugin = $request->plugin ?? '';
     $handler = \config($plugin ? "plugin.$plugin.view.handler" : 'view.handler');
-    return new Response(200, [], $handler::render($template, $vars, $app, $plugin));
+    return new Response(200, [], $handler::render($template, $vars, $app));
 }
 
 /**
@@ -419,8 +421,7 @@ function worker_bind($worker, $class)
         'onBufferFull',
         'onBufferDrain',
         'onWorkerStop',
-        'onWebSocketConnect',
-        'onWorkerReload'
+        'onWebSocketConnect'
     ];
     foreach ($callbackMap as $name) {
         if (method_exists($class, $name)) {
